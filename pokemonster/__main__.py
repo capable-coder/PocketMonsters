@@ -66,7 +66,7 @@ async def main():
     await app.start()
     await load_start()
     a1 = random.randint(1, 9)
-    await app.send_message(chat_id=-1001825502219, text=f"Zinda hu bhenchod!!\nTime taken: 0.{a1}")
+    await app.send_message(chat_id=-1003801101735, text=f"Zinda hu bhenchod!!\nTime taken: 0.{a1}")
     await cmds(app)
     await DB.setup()
     await idle()
