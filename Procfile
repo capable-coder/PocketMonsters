@@ -1,3 +1,3 @@
-worker: python3 -m pokemonster.pokemonster
+worker: python pokemonster/__main__.py
 
 
