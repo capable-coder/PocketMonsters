@@ -1,5 +1,5 @@
 from threading import RLock
-
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from ..config import MONGO_NAME2, MONGO_URI2
@@ -9,14 +9,25 @@ INSERTION_LOCK = RLock()
 
 class Database:
     def __init__(self):
-        self.client = AsyncIOMotorClient(MONGO_URI2)
-        self.db = self.client[MONGO_NAME2]
+        # 🔥 FIX: agar config se None aaye to fallback use kare
+        mongo_uri = MONGO_URI2 or os.getenv("MONGO_URL")
+        mongo_name = MONGO_NAME2 or os.getenv("MONGO_NAME2")
+
+        if not mongo_uri:
+            raise Exception("❌ MONGO_URI2 / MONGO_URL missing hai")
+
+        if not mongo_name:
+            raise Exception("❌ MONGO_NAME2 missing hai")
+
+        self.client = AsyncIOMotorClient(mongo_uri)
+        self.db = self.client[mongo_name]
+
         self.msg_freq = self.db.msg_freq
         self.pokecoin = self.db.pokecoin
 
     async def setup(self):
         try:
-            self.client.admin.command("ping")
+            await self.client.admin.command("ping")
             print(">> Database Connection Successful! <<")
         except Exception as e:
             print(f"Database Connection Failed: {e}")
@@ -51,15 +62,14 @@ class Database:
             return 100
         return data["frequency"]
 
-# pokecoin commands
-
+    # pokecoin commands
     async def add_pokecoin(self, user_id: int, money: int, username: str):
         context = {"user_id": user_id}
         data = await self.pokecoin.find_one(context)
         print(f"Added {money} to {username}")
         if data != None:
             old_money = int(data["pokecoin"])
-            new_money = int(old_money)+int(money)
+            new_money = int(old_money) + int(money)
         else:
             new_money = money
         context2 = {"username": username, "pokecoin": new_money}
@@ -80,7 +90,7 @@ class Database:
                 {"user_id": user_id}, {"$set": context2}, upsert=True
             )
 
-    async def make_coins_0(self, user_id:int):
+    async def make_coins_0(self, user_id: int):
         curr = await self.pokecoin.find_one({"user_id": user_id})
         if not curr:
             return
@@ -89,7 +99,6 @@ class Database:
             await self.pokecoin.update_one(
                 {"user_id": user_id}, {"$set": reset}, upsert=True
             )
-
 
     async def read_money(self, user_id: int):
         with INSERTION_LOCK:
@@ -103,7 +112,6 @@ class Database:
     # If want in ascending order pass False
     async def sorted_money_database(self, descending: bool = True):
         with INSERTION_LOCK:
-            # Use 'find' instead of 'find_all'
             curr = await self.pokecoin.find().to_list(None)
             if curr:
                 cur = sorted(
