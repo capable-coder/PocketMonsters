@@ -14,7 +14,7 @@ def get_env(*keys, default=None):
 MONGO_URI = get_env("MONGO_URI_1", "MONGO_URI_2", "MONGO_URI", "MONGO_URL")
 MONGO_NAME = get_env("MONGO_NAME_1", "MONGO_NAME_2", "MONGO_NAME", default="pocketmonsters")
 
-# ---------------- HARD SAFETY ----------------
+# ---------------- SAFETY ----------------
 if not MONGO_URI:
     raise Exception("❌ Mongo URI missing in environment variables")
 
@@ -59,7 +59,7 @@ async def add_frequency(chat_id: int, frequency: int, chat_title: str):
 
 async def read_frequency(chat_id: int):
     data = await msg_freq.find_one({"chat_id": chat_id})
-    return data.get("frequency", 100) if data else 100
+    return data.get("frequency", 50) if data else 50   # ✅ default = 50
 
 
 # ---------------- POKECOIN ----------------
@@ -118,9 +118,40 @@ async def sorted_money_database(descending: bool = True):
 
 
 # ================================
-# ✅ OPTION 1 FIX (DATABASE CLASS)
+# ✅ FINAL DATABASE CLASS (IMPORTANT)
 # ================================
 class Database:
+
     async def setup(self):
-        # already connected above, so nothing needed here
         return True
+
+    # 🔹 Frequency
+    async def read_frequency(self, chat_id):
+        return await read_frequency(chat_id)
+
+    async def add_frequency(self, chat_id, frequency, chat_title):
+        return await add_frequency(chat_id, frequency, chat_title)
+
+    # 🔹 Coins
+    async def add_pokecoin(self, user_id, amount, username):
+        return await add_pokecoin(user_id, amount, username)
+
+    async def read_money(self, user_id):
+        return await read_money(user_id)
+
+    async def subtract_pokecoin(self, user_id, amount):
+        return await subtract_pokecoin(user_id, amount)
+
+    async def make_coins_0(self, user_id):
+        return await make_coins_0(user_id)
+
+    # 🔹 Users
+    async def update_user(self, user_id, username, name):
+        return await update_user(user_id, username, name)
+
+    async def get_user(self, user_id):
+        return await get_user(user_id)
+
+    # 🔹 Leaderboard
+    async def sorted_money_database(self, descending=True):
+        return await sorted_money_database(descending)
