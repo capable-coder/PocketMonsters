@@ -7,17 +7,37 @@ from ..config import MONGO_NAME2, MONGO_URI2
 INSERTION_LOCK = RLock()
 
 
+def get_env(*keys, default=None):
+    """Safe env fallback reader"""
+    for key in keys:
+        val = os.getenv(key)
+        if val:
+            return val
+    return default
+
+
 class Database:
     def __init__(self):
-        # 🔥 FIX: agar config se None aaye to fallback use kare
-        mongo_uri = MONGO_URI2 or os.getenv("MONGO_URL")
-        mongo_name = MONGO_NAME2 or os.getenv("MONGO_NAME2")
 
+        # ✅ SAFE MONGO URI (multi fallback)
+        mongo_uri = (
+            MONGO_URI2
+            or get_env("MONGO_URI2", "MONGO_URL", "MONGO_URI")
+        )
+
+        # ✅ SAFE DB NAME (multi fallback)
+        mongo_name = (
+            MONGO_NAME2
+            or get_env("MONGO_NAME2", "MONGO_NAME")
+            or "pocketmonsters"
+        )
+
+        # ❌ HARD STOP IF MISSING
         if not mongo_uri:
-            raise Exception("❌ MONGO_URI2 / MONGO_URL missing hai")
+            raise Exception("❌ Mongo URI missing (check MONGO_URI2 / MONGO_URL)")
 
-        if not mongo_name:
-            raise Exception("❌ MONGO_NAME2 missing hai")
+        if not isinstance(mongo_name, str):
+            raise Exception("❌ Mongo DB name invalid")
 
         self.client = AsyncIOMotorClient(mongo_uri)
         self.db = self.client[mongo_name]
@@ -33,89 +53,75 @@ class Database:
             print(f"Database Connection Failed: {e}")
             quit(1)
 
-    # update user if they exists in db else add them
-    async def update_user(self, user_id: int, username: str, name: str) -> None:
+    # ---------------- USERS ----------------
+    async def update_user(self, user_id: int, username: str, name: str):
         context = {"user_id": user_id, "username": username, "name": name}
         await self.db.user_base.update_one(
             {"user_id": user_id}, {"$set": context}, upsert=True
         )
 
-    # get user from db
-    async def get_user(self, user_id: int) -> dict:
-        data = await self.db.user_base.find_one({"user_id": user_id})
-        if data:
-            return data
-        else:
-            return {}
+    async def get_user(self, user_id: int):
+        return await self.db.user_base.find_one({"user_id": user_id}) or {}
 
-    # msg_freq Commands
+    # ---------------- FREQUENCY ----------------
     async def add_frequency(self, chat_id: int, frequency: int, chat_title: str):
-        context = {"chat_title": chat_title, "frequency": frequency}
         await self.msg_freq.update_one(
-            {"chat_id": chat_id}, {"$set": context}, upsert=True
+            {"chat_id": chat_id},
+            {"$set": {"chat_title": chat_title, "frequency": frequency}},
+            upsert=True,
         )
 
-    async def read_frequency(self, chat_id) -> int:
-        context = {"chat_id": chat_id}
-        data = await self.msg_freq.find_one(context)
-        if not data:
-            return 100
-        return data["frequency"]
+    async def read_frequency(self, chat_id: int) -> int:
+        data = await self.msg_freq.find_one({"chat_id": chat_id})
+        return data["frequency"] if data else 100
 
-    # pokecoin commands
+    # ---------------- POKECOIN ----------------
     async def add_pokecoin(self, user_id: int, money: int, username: str):
-        context = {"user_id": user_id}
-        data = await self.pokecoin.find_one(context)
-        print(f"Added {money} to {username}")
-        if data != None:
-            old_money = int(data["pokecoin"])
-            new_money = int(old_money) + int(money)
-        else:
-            new_money = money
-        context2 = {"username": username, "pokecoin": new_money}
+        data = await self.pokecoin.find_one({"user_id": user_id})
+
+        old_money = int(data["pokecoin"]) if data else 0
+        new_money = old_money + int(money)
+
         await self.pokecoin.update_one(
-            {"user_id": user_id}, {"$set": context2}, upsert=True
+            {"user_id": user_id},
+            {"$set": {"username": username, "pokecoin": new_money}},
+            upsert=True,
         )
 
     async def subtract_pokecoin(self, user_id: int, money: int):
-        context = {"user_id": user_id}
-        data = await self.pokecoin.find_one(context)
+        data = await self.pokecoin.find_one({"user_id": user_id})
         if not data:
             return
-        else:
-            prev_money = data["pokecoin"]
-            new_money = prev_money - money
-            context2 = {"pokecoin": new_money}
-            await self.pokecoin.update_one(
-                {"user_id": user_id}, {"$set": context2}, upsert=True
-            )
+
+        new_money = int(data.get("pokecoin", 0)) - int(money)
+
+        await self.pokecoin.update_one(
+            {"user_id": user_id},
+            {"$set": {"pokecoin": new_money}},
+            upsert=True,
+        )
 
     async def make_coins_0(self, user_id: int):
-        curr = await self.pokecoin.find_one({"user_id": user_id})
-        if not curr:
-            return
-        else:
-            reset = {"pokecoin": 0}
-            await self.pokecoin.update_one(
-                {"user_id": user_id}, {"$set": reset}, upsert=True
-            )
+        await self.pokecoin.update_one(
+            {"user_id": user_id},
+            {"$set": {"pokecoin": 0}},
+            upsert=True,
+        )
 
     async def read_money(self, user_id: int):
         with INSERTION_LOCK:
-            context = {"user_id": user_id}
-            data = await self.pokecoin.find_one(context)
-            if data != None:
-                return data["pokecoin"]
-            else:
-                return 0
+            data = await self.pokecoin.find_one({"user_id": user_id})
+            return data["pokecoin"] if data else 0
 
-    # If want in ascending order pass False
+    # ---------------- LEADERBOARD ----------------
     async def sorted_money_database(self, descending: bool = True):
         with INSERTION_LOCK:
-            curr = await self.pokecoin.find().to_list(None)
-            if curr:
-                cur = sorted(
-                    curr, key=lambda c_id: int(c_id["pokecoin"]), reverse=descending)
-                return cur
-            else:
+            data = await self.pokecoin.find().to_list(None)
+            if not data:
                 return []
+
+            return sorted(
+                data,
+                key=lambda x: int(x.get("pokecoin", 0)),
+                reverse=descending,
+            )
