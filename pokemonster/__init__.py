@@ -1,32 +1,42 @@
 import logging
-
+import os
 from pyrogram import Client
 
-from .config import api_id, hash, token
+from .config import API_ID, API_HASH, BOT_TOKEN
 
+
+# ---------------- SAFE LOG PATH ----------------
+LOG_DIR = "pokemonster/logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+LOG_FILE = os.path.join(LOG_DIR, "logEvents.txt")
+
+
+# ---------------- LOGGING ----------------
 FORMAT = "[ok] %(message)s"
 
-logging.basicConfig( 
-
-    handlers=[logging.FileHandler("pokemonster\logs\logEvents.txt"), logging.StreamHandler()], 
-
+logging.basicConfig(
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ],
     level=logging.INFO,
-
-    format=FORMAT, 
-
-    datefmt="[%X]", 
-
+    format=FORMAT,
+    datefmt="[%X]",
 )
 
-logging.getLogger("pyrogram").setLevel(logging.INFO) 
+logging.getLogger("pyrogram").setLevel(logging.INFO)
+
+LOGGER = logging.getLogger("[ok]")
 
 
-LOGGER = logging.getLogger('[ok]') 
-
+# ---------------- PYROGRAM CLIENT ----------------
 app = Client(
-  "client3",
-  api_id,
-  hash,
-  bot_token=token,
-  plugins=dict(root="pokemonster.modules")
+    name="client3",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN,
+    plugins=dict(root="pokemonster.modules")
 )
+
+LOGGER.info("Client initialized successfully")
