@@ -9,7 +9,7 @@ from pokemonster import app
 
 button = [[InlineKeyboardButton(
     text="ADD ME", url="http://t.me/pocketmonsters_bot?startgroup=new"),
-    InlineKeyboardButton("News",url="https://t.me/PocketMonstersUpdates")]]
+    InlineKeyboardButton("News",url="https://t.me/II_ADI_II")]]
 
 
 def random_text(message):
