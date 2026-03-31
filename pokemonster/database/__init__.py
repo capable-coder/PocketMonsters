@@ -115,3 +115,12 @@ async def sorted_money_database(descending: bool = True):
         key=lambda x: int(x.get("pokecoin", 0)),
         reverse=descending,
     )
+
+
+# ================================
+# ✅ OPTION 1 FIX (DATABASE CLASS)
+# ================================
+class Database:
+    async def setup(self):
+        # already connected above, so nothing needed here
+        return True
