@@ -7,7 +7,7 @@ from pyrogram.types import BotCommand
 
 from pokemonster import app
 
-# ---------------- DATABASE IMPORT (FIXED) ----------------
+# ---------------- DATABASE IMPORT ----------------
 from pokemonster.database import (
     update_user,
     get_user,
@@ -22,7 +22,6 @@ from pokemonster.database import (
 
 # ---------------- LOGGING SAFE PATH ----------------
 LOG_PATH = os.path.join("pokemonster", "logs", "logs.txt")
-
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
 logging.basicConfig(
@@ -32,7 +31,6 @@ logging.basicConfig(
     ],
     level=logging.INFO,
     format="[KRRISH] %(message)s",
-    datefmt="[%X]",
 )
 
 LOGGER = logging.getLogger("[KRRISH]")
@@ -98,8 +96,8 @@ async def main():
     finally:
         try:
             await app.stop()
-        except:
-            pass
+        except Exception as e:
+            LOGGER.error(f"Stop error: {e}")
 
 
 # ---------------- RUN ----------------
