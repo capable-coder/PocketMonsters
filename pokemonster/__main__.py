@@ -1,5 +1,6 @@
 import logging
 import random
+import os
 
 from pyrogram import idle
 from pyrogram.types import BotCommand
@@ -7,70 +8,94 @@ from pyrogram.types import BotCommand
 from pokemonster import app
 from pokemonster.database import Database
 
+# ---------------- SAFE DB INIT ----------------
 DB = Database()
 
-FORMAT = "[KRRISH] %(message)s"
+# ---------------- LOGGING SAFE PATH ----------------
+LOG_PATH = os.path.join("pokemonster", "logs", "logs.txt")
+
 logging.basicConfig(
-    handlers=[logging.FileHandler(
-        "pokemonster\logs\logs.txt"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler(LOG_PATH),
+        logging.StreamHandler()
+    ],
     level=logging.INFO,
-    format=FORMAT,
+    format="[KRRISH] %(message)s",
     datefmt="[%X]",
 )
-LOGGER = logging.getLogger('[KRRISH]')
+
+LOGGER = logging.getLogger("[KRRISH]")
 
 
+# ---------------- STARTUP ----------------
 async def load_start():
-    LOGGER.info("[INFO]: Booting.....")
+    LOGGER.info("Booting bot...")
 
     try:
-        LOGGER.info("[INFO]: PYROGRAM BOTS STARTED")
-
+        LOGGER.info("Pyrogram bot started successfully")
     except Exception as e:
-        LOGGER.info(
-            f">>>>>>>>>>>>>>>Bot wasn't able to send message in your log channel\n\nERROR: {e}")
+        LOGGER.error(f"Startup error: {e}")
 
 
+# ---------------- COMMANDS ----------------
 async def cmds(app):
     await app.set_bot_commands(
         [
-            BotCommand("start", "To check if the bot is running"),
-            BotCommand("catch", "Catch the spawned Pokemon"),
-            BotCommand("pokedex", "View your Pokedex Collection"),
-            BotCommand(
-                "ptrade", "Exchange your Pokemons. Type /ptrade for the manual"),
-            BotCommand("pfav", "Choose your favourite Pokemon"),
-            BotCommand(
-                "pgift", "Show your care to new members. Type /pgift for the manual"),
-            BotCommand("winner", "See who's the best"),
-            BotCommand("leader", "See who's the best"),
-            BotCommand("release", "Release the Pokemom"),
-            BotCommand("pinfo", "Get info about a Pokemon"),
-            BotCommand("devcmds", "Get all dev cmds"),
-            BotCommand(
-                "updatepower", "If you think your power is not according to the pokemon you have caught"),
-            BotCommand("spawn", "Test your knowledge"),
-            BotCommand("guess", "Catch the Spawned Pokemon"),
-            BotCommand("poketrivia", "Test your knowledge about pokemons"),
-            BotCommand(
-                "freqchange", "This command will change the number of messages after which pokemon will spawn in your group."),
-            BotCommand(
-                "pokestore", "You can buy Pokemon of different rarity from here"),
-            BotCommand("wallet", "You can check PokeCoins in your wallet"),
-            BotCommand("pay", "You can Share money with this command.")
-
-        ])
+            BotCommand("start", "Check bot status"),
+            BotCommand("catch", "Catch Pokemon"),
+            BotCommand("pokedex", "View collection"),
+            BotCommand("ptrade", "Trade Pokemon"),
+            BotCommand("pfav", "Set favourite"),
+            BotCommand("pgift", "Gift Pokemon"),
+            BotCommand("winner", "Top player"),
+            BotCommand("leader", "Leaderboard"),
+            BotCommand("release", "Release Pokemon"),
+            BotCommand("pinfo", "Pokemon info"),
+            BotCommand("devcmds", "Developer commands"),
+            BotCommand("updatepower", "Update power"),
+            BotCommand("spawn", "Spawn test"),
+            BotCommand("guess", "Guess Pokemon"),
+            BotCommand("poketrivia", "Trivia game"),
+            BotCommand("freqchange", "Change spawn frequency"),
+            BotCommand("pokestore", "Buy Pokemon"),
+            BotCommand("wallet", "Check coins"),
+            BotCommand("pay", "Send money"),
+        ]
+    )
 
 
+# ---------------- MAIN ----------------
 async def main():
-    await app.start()
-    await load_start()
-    a1 = random.randint(1, 9)
-    await app.send_message(chat_id=-1003801101735, text=f"Zinda hu bhenchod!!\nTime taken: 0.{a1}")
-    await cmds(app)
-    await DB.setup()
-    await idle()
-    await app.stop()
+    try:
+        await app.start()
+        await load_start()
 
+        # safe random log message (NO CRASH IF CHAT NOT EXISTS)
+        try:
+            a1 = random.randint(1, 9)
+            await app.send_message(
+                chat_id=-1003801101735,
+                text=f"Bot Started!\nTime: 0.{a1}"
+            )
+        except Exception as e:
+            LOGGER.warning(f"Log channel message failed: {e}")
+
+        await cmds(app)
+        await DB.setup()
+
+        LOGGER.info("Bot is running...")
+        await idle()
+
+    except Exception as e:
+        LOGGER.error(f"Fatal error in main: {e}")
+
+    finally:
+        try:
+            await app.stop()
+        except:
+            pass
+
+
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(main())
