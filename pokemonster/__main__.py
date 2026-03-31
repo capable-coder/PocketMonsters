@@ -6,13 +6,24 @@ from pyrogram import idle
 from pyrogram.types import BotCommand
 
 from pokemonster import app
-from pokemonster.database import Database
 
-# ---------------- SAFE DB INIT ----------------
-DB = Database()
+# ---------------- DATABASE IMPORT (FIXED) ----------------
+from pokemonster.database import (
+    update_user,
+    get_user,
+    add_frequency,
+    read_frequency,
+    add_pokecoin,
+    subtract_pokecoin,
+    make_coins_0,
+    read_money,
+    sorted_money_database
+)
 
 # ---------------- LOGGING SAFE PATH ----------------
 LOG_PATH = os.path.join("pokemonster", "logs", "logs.txt")
+
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
 logging.basicConfig(
     handlers=[
@@ -30,11 +41,7 @@ LOGGER = logging.getLogger("[KRRISH]")
 # ---------------- STARTUP ----------------
 async def load_start():
     LOGGER.info("Booting bot...")
-
-    try:
-        LOGGER.info("Pyrogram bot started successfully")
-    except Exception as e:
-        LOGGER.error(f"Startup error: {e}")
+    LOGGER.info("Pyrogram bot started successfully")
 
 
 # ---------------- COMMANDS ----------------
@@ -70,7 +77,7 @@ async def main():
         await app.start()
         await load_start()
 
-        # safe random log message (NO CRASH IF CHAT NOT EXISTS)
+        # safe startup message
         try:
             a1 = random.randint(1, 9)
             await app.send_message(
@@ -81,7 +88,6 @@ async def main():
             LOGGER.warning(f"Log channel message failed: {e}")
 
         await cmds(app)
-        await DB.setup()
 
         LOGGER.info("Bot is running...")
         await idle()
