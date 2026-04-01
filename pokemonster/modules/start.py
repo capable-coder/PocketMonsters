@@ -113,7 +113,7 @@ async def start(client: Client, message: Message):
             )
 
         else:
-            await message.reply_text("❌ Make me admin to play!")
+            await message.reply_text("😏 Make me admin to play!")
 
 
 # 🔹 HELP MENU
@@ -136,7 +136,7 @@ async def help_menu(client, query):
 """
 
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back", callback_data="back_start")]
+        [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="back_start")]
     ])
 
     await query.message.edit_text(text, reply_markup=buttons)
@@ -146,21 +146,33 @@ async def help_menu(client, query):
 @app.on_callback_query(filters.regex("back_start"))
 async def back_start(client, query):
 
-    text = "✨ Welcome back Trainer!"
+    text = f"""
+╭━━━〔 ⚡ Pokémon World ⚡ 〕━━━╮
+┃
+┃ 👑 **Powered by ADI**
+┃
+┃ 🐾 Catch • Trade • Battle
+┃ 🎮 Become the Ultimate Trainer
+┃ 💎 Build Your Dream Team
+┃
+┃ ⚡ Start your journey now!
+┃
+╰━━━━━━━━━━━━━━━━━━━━━━╯
+"""
 
     buttons = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("➕ Add Me", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")
+            InlineKeyboardButton("➕ 𝐏𝐨𝐤𝐞𝐝𝐞𝐱🗯🐛", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")
         ],
         [
-            InlineKeyboardButton("📢 Updates", url=UPDATE_LINK),
-            InlineKeyboardButton("💬 Support", url=SUPPORT_LINK)
+            InlineKeyboardButton("📢 𝐔𝐩𝐝𝐚𝐭𝐞𝐬", url=UPDATE_LINK),
+            InlineKeyboardButton("💬 𝐒𝐮𝐩𝐩𝐨𝐫𝐭", url=SUPPORT_LINK)
         ],
         [
-            InlineKeyboardButton("👑 ADI", url=OWNER_LINK)
+            InlineKeyboardButton("👑 𝐀𝐝𝐢", url=OWNER_LINK)
         ],
         [
-            InlineKeyboardButton("📖 Help & Commands", callback_data="help_menu")
+            InlineKeyboardButton("📖 𝐇𝐞𝐥𝐩 & 𝐂𝐦𝐝𝐬", callback_data="help_menu")
         ]
     ])
 
