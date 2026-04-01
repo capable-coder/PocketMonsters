@@ -46,7 +46,7 @@ async def trivia(_, message: Message):
         return await message.reply_text("⚠️ You already have an active trivia session!")
 
     # ---------- SET COOLDOWN ----------
-    user_cooldowns[user_id] = time.time() + 1800  # 30 min
+    user_cooldowns[user_id] = time.time() + 120  # 30 min
 
     # ---------- PICK QUESTION ----------
     quesdata = random.choice(data["results"])
@@ -101,7 +101,7 @@ async def trivia_callback(_, query: CallbackQuery):
 
         # ---------- SECURITY CHECK ----------
         if click_user != user_id:
-            return await query.answer("Not for you ❌", show_alert=True)
+            return await query.answer("Not for you 👻", show_alert=True)
 
         session = active_trivia.get(user_id)
 
@@ -132,7 +132,7 @@ async def trivia_callback(_, query: CallbackQuery):
 
         # ---------- WRONG ----------
         else:
-            text = "Wrong Answer ❌"
+            text = "Wrong Answer 😮‍💨"
 
         active_trivia.pop(user_id, None)
 
