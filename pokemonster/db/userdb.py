@@ -63,7 +63,6 @@ class USERSINFO(MongoDB):
         with INSERTION_LOCK:
             curr = self.find_one(
                 {
-                   # "chat_id": chat_id,
                     "user_id": user_id,
                 }
             )
@@ -77,7 +76,6 @@ class USERSINFO(MongoDB):
                             return
                         self.update(
                             {
-                          #      "chat_id": chat_id,
                                 "user_id": user_id,
                             },
                             {
@@ -86,7 +84,6 @@ class USERSINFO(MongoDB):
                         )
                         self.update(
                             {
-                          #      "chat_id": chat_id,
                                 "user_id": user_id,
                             },
                             {
@@ -97,7 +94,6 @@ class USERSINFO(MongoDB):
                         return
                     self.update(
                         {
-                        #    "chat_id": chat_id,
                             "user_id": user_id,
                         },
                         {
@@ -107,7 +103,6 @@ class USERSINFO(MongoDB):
                     )
                     self.update(
                         {
-                            "chat_id": chat_id,
                             "user_id": user_id
                         },
                         {
@@ -120,18 +115,16 @@ class USERSINFO(MongoDB):
                     poko = [poke_id]
                     self.update(
                         {
-                       #     "chat_id":chat_id,
-                            "user_id":user_id
+                            "user_id": user_id
                         },
                         {
-                            "poke_id":poko
+                            "poke_id": poko
                         }
                     )
             else:
                 poko = [poke_id]
                 self.insert_one(
                     {
-                 #       "chat_id": chat_id,
                         "user_id": user_id,
                         "poke_id": poko,
                         "fav_pok": fav_poke,
@@ -143,7 +136,7 @@ class USERSINFO(MongoDB):
     def get_unique_chat_ids_count(self, want_len=False):
         with INSERTION_LOCK:
             chat_ids = self.find_all()
-            chat_ids = {i["chat_id"] for i in chat_ids}
+            chat_ids = {i.get("chat_id") for i in chat_ids if i.get("chat_id")}
             if want_len:
                 quer = len(list(chat_ids))
             else:
@@ -174,7 +167,7 @@ class USERSINFO(MongoDB):
 
     def pokeList(self, chatid, userid):
         with INSERTION_LOCK:
-            curr = self.find_one({"chat_id": chatid, "user_id": userid})
+            curr = self.find_one({"user_id": userid})
             if curr:
                 return curr["poke_id"]
             else:
@@ -182,25 +175,25 @@ class USERSINFO(MongoDB):
 
     def get_user_db(self, chatid, userid):
         with INSERTION_LOCK:
-            curr = self.find_one({"chat_id": chatid, "user_id": userid})
+            curr = self.find_one({"user_id": userid})
             if curr:
                 return curr
             else:
                 return None
 
     def update_total_poke_pow(self, chatid, userid, weight):
-        curr = self.find_one({"chat_id": chatid, "user_id": userid})
+        curr = self.find_one({"user_id": userid})
         if curr:
-            self.update({"chat_id": chatid, "user_id": userid},
+            self.update({"user_id": userid},
                         {"poke_pow": weight})
             return True
         return None
 
     def update_fav_pok(self, chatid, userid, favpok):
         with INSERTION_LOCK:
-            curr = self.find_one({"chat_id": chatid, "user_id": userid})
+            curr = self.find_one({"user_id": userid})
             if curr:
-                self.update({"chat_id": chatid, "user_id": userid}, {
+                self.update({"user_id": userid}, {
                             "fav_pok": favpok})
                 return
             else:
@@ -208,10 +201,10 @@ class USERSINFO(MongoDB):
 
     def update_fav_pok_to_none(self, chatid, userid):
         with INSERTION_LOCK:
-            curr = self.find_one({"chat_id": chatid, "user_id": userid})
+            curr = self.find_one({"user_id": userid})
             if curr:
                 self.update(
-                    {"chat_id": chatid, "user_id": userid}, {"fav_pok": 0})
+                    {"user_id": userid}, {"fav_pok": 0})
                 return
             else:
                 return
@@ -219,7 +212,7 @@ class USERSINFO(MongoDB):
 
     def sorted_weight_db(self, chatid, descending: bool = True):
         with INSERTION_LOCK:
-            curr = self.find_all({"chat_id": chatid})
+            curr = self.find_all()
             if curr:
                 cur = sorted(
                     curr, key=lambda c_id: c_id["poke_pow"], reverse=descending)
@@ -242,6 +235,6 @@ class USERSINFO(MongoDB):
         with INSERTION_LOCK:
             curr = self.find_one({"user_id": userid})
             if curr:
-                self.delete_one({"chat_id": chatid, "user_id": userid})
+                self.delete_one({"user_id": userid})
                 return True
             return False
