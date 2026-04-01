@@ -1,5 +1,5 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClien
 
 # ---------------- SAFE ENV ----------------
 def get_env(*keys, default=None):
