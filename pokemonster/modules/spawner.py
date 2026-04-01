@@ -102,7 +102,7 @@ async def catch(c: Client, message: Message):
         userid = message.from_user.id
 
         if not spawned.get(chatid, {}).get("val"):
-            return await message.reply_text("❌ No Pokémon to catch!")
+            return await message.reply_text("😮‍💨 No Pokémon to catch!")
 
         try:
             guessed = message.text.split(None, 1)[1].lower()
@@ -127,7 +127,7 @@ async def catch(c: Client, message: Message):
             spawned[chatid] = {"val": False, "msg_count": 0, "appear_msg": 0, "m_id": 0}
 
         else:
-            await message.reply_text("❌ Wrong guess!")
+            await message.reply_text("🥴 Wrong guess!")
 
     except Exception as e:
         print(e)
