@@ -99,7 +99,7 @@ async def catch(c: Client, message: Message):
         if not message.from_user:
             return await message.reply_text("Invalid user")
 
-        chatid = str(message.chat.id)
+        chatid = message.chat.id
         userid = message.from_user.id
 
         if not spawned.get(chatid, {}).get("val"):
