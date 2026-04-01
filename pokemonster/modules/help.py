@@ -56,7 +56,7 @@ responses = [
 ➛ A new Pokemon spawns in the group every 100 messages.
 ➛ The Pokemon will run away after 35 messages.
 
-× For more info, join @PokemonCatcherUpdates.''',
+× For more info, join @II_ADI_II.''',
     '''𝗪𝗲𝗹𝗰𝗼𝗺𝗲 𝗧𝗼 𝗼𝘂𝗿 𝗣𝗼𝗸𝗲𝗺𝗼𝗻 𝗧𝗿𝗮𝗶𝗻𝗲𝗿'𝘀 𝘀𝗼𝗰𝗶𝗲𝘁𝘆 !!
 
 ─────────────────────
@@ -87,7 +87,7 @@ responses = [
 
 ─────────────────────
 
-× For more info Join @PokemonCatcherUpdates .
+× For more info Join @II_ADI_II .
 
 XoXo''',
     '''Welcome to our Pokemon training community!
@@ -116,7 +116,7 @@ Here are some commands you can use to catch, trade, and manage your Pokemon:
 
 Remember, a new Pokemon will appear in the group every 100 messages. After 35 messages, the Pokemon will run away into the wilderness.
 
-For more info and updates, join @PokemonCatcherUpdates.
+For more info and updates, join @II_ADI_II.
 
 Good luck on your journey to become the ultimate Pokemon trainer! 🚀🔥
 ''',
