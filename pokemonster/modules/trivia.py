@@ -4,121 +4,149 @@ import random
 import time
 
 from pyrogram import Client, filters
-from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
-                            InlineKeyboardMarkup, Message)
+from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from pokemonster import app
 from pokemonster.database import Database
-
 from ..config import devs
 
-with open('trivia.json') as f:
+
+# ---------------- LOAD QUESTIONS ----------------
+with open('trivia.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
-active_trivia = {}
-user_cooldowns = {}
+
+# ---------------- MEMORY STORAGE ----------------
+active_trivia = {}      # user_id -> session
+user_cooldowns = {}     # user_id -> cooldown time
 
 DB = Database()
 
 
-@app.on_message(filters.group & filters.command('trivia'), group=84)
-async def trivia(_, message):
-    user_id = message.from_user.id
+# ---------------- TRIVIA COMMAND ----------------
+@app.on_message(filters.group & filters.command("trivia"), group=84)
+async def trivia(_, message: Message):
+
+    user_id = str(message.from_user.id)
+
+    # ---------- COOLDOWN CHECK ----------
     if user_id in user_cooldowns:
-        cooldown_expiry = user_cooldowns[user_id]
-        time_left = int(cooldown_expiry - time.time())
-
-        if time_left > 0:
-            minutes = time_left // 60
-            seconds = time_left % 60
-            await message.reply_text(f"Please wait {minutes}:{seconds} seconds before using trivia again.")
-            return
+        if time.time() < user_cooldowns[user_id]:
+            remaining = int(user_cooldowns[user_id] - time.time())
+            minutes = remaining // 60
+            seconds = remaining % 60
+            return await message.reply_text(
+                f"⏳ Please wait {minutes}:{seconds} before using trivia again."
+            )
         else:
-            try:
-                user_cooldowns.pop(user_id)
-            except KeyError:
-                pass
-            try:
-                active_trivia.pop(user_id)
-            except KeyError:
-                pass
+            user_cooldowns.pop(user_id, None)
 
+    # ---------- ACTIVE SESSION CHECK ----------
     if user_id in active_trivia:
-        await message.reply_text("You already have an active trivia session.")
-        return
+        return await message.reply_text("⚠️ You already have an active trivia session!")
 
-    user_cooldowns[user_id] = time.time() + 1800
+    # ---------- SET COOLDOWN ----------
+    user_cooldowns[user_id] = time.time() + 1800  # 30 min
 
-    quesdata = random.choice(data['results'])
+    # ---------- PICK QUESTION ----------
+    quesdata = random.choice(data["results"])
     question = quesdata["question"]
     correct_answer = quesdata["correct_answer"]
-    incorrect_answers = quesdata['incorrect_answers']
-    all_options = incorrect_answers + [correct_answer]
-    random.shuffle(all_options)
+    incorrect_answers = quesdata["incorrect_answers"]
 
-    button_list = [
-        [InlineKeyboardButton(
-            option.capitalize(), callback_data=f"triv:{option.strip().lower()}:{user_id}")]
-        for option in all_options
+    options = incorrect_answers + [correct_answer]
+    random.shuffle(options)
+
+    # ---------- BUTTONS ----------
+    buttons = [
+        [InlineKeyboardButton(opt, callback_data=f"triv:{opt.lower()}:{user_id}")]
+        for opt in options
     ]
 
-    question = await message.reply_text(
-        question,
-        reply_markup=InlineKeyboardMarkup(button_list)
+    msg = await message.reply_text(
+        f"❓ {question}",
+        reply_markup=InlineKeyboardMarkup(buttons)
     )
 
+    # ---------- SAVE SESSION ----------
     active_trivia[user_id] = {
         "correct_answer": correct_answer.lower(),
-        "expiration_time": time.time() + 15,
-        "answered": False
+        "answered": False,
+        "expires": time.time() + 15,
+        "message_id": msg.id
     }
-    print(active_trivia)
 
+    # ---------- AUTO TIMEOUT ----------
     await asyncio.sleep(15)
+
+    session = active_trivia.get(user_id)
+    if session and not session["answered"]:
+        try:
+            await msg.edit_text("⏰ Time Up! No answer selected.")
+        except:
+            pass
+        active_trivia.pop(user_id, None)
+
+
+# ---------------- CALLBACK HANDLER ----------------
+@app.on_callback_query(filters.regex(r"^triv:"))
+async def trivia_callback(_, query: CallbackQuery):
+
     try:
-        if not active_trivia[user_id]["answered"]:
-            print("Time up!")
-            await question.edit_text("Time Up!")
-            active_trivia.pop(user_id, None)
-    except KeyError as e:
-        print(e)
+        parts = query.data.split(":")
+        selected = parts[1].lower()
+        user_id = str(parts[2])
 
+        click_user = str(query.from_user.id)
 
-@app.on_callback_query(filters.regex(r"triv"))
-async def handle_callback_query(client, query: CallbackQuery):
-    selected_option = query.data.split(':')[1]
-    cb_user_id = int(query.data.split(":")[2])
-    user_id = query.from_user.id if query.from_user else 0
-    if user_id == cb_user_id:
-        active_session = active_trivia.get(int(user_id))
-        if active_session:
-            print("active session found")
-            coins = await DB.read_money(cb_user_id)
-            correct_option = active_session["correct_answer"]
-            if selected_option == correct_option:
-                active_trivia[cb_user_id]["answered"] = True
-                if int(coins) == 10000:
-                    response_text = "Correct answer\nBut your wallet already at it's maximum capicty"
-                else:
-                    added = 10
-                    if int(coins) + 10 > 10000:
-                        added = 10000 - int(coins)
-                    response_text = f"Correct! 🎉 \nAdded {added} Rubies to your wallet"
-                    await DB.add_pokecoin(cb_user_id, added, query.from_user.username)
+        # ---------- SECURITY CHECK ----------
+        if click_user != user_id:
+            return await query.answer("Not for you ❌", show_alert=True)
+
+        session = active_trivia.get(user_id)
+
+        if not session:
+            return await query.answer("Session expired ⌛", show_alert=True)
+
+        if session["answered"]:
+            return await query.answer("Already answered!", show_alert=True)
+
+        session["answered"] = True
+
+        coins = int(await DB.read_money(user_id))
+        correct = session["correct_answer"]
+
+        # ---------- CORRECT ----------
+        if selected == correct:
+
+            reward = 10
+
+            if coins >= 10000:
+                text = "Correct 🎉\nBut wallet already full 💰"
             else:
-                response_text = "Incorrect Answer! ❌"
-                active_trivia[cb_user_id]["answered"] = True
-                active_trivia.pop(cb_user_id, None)
-            await query.message.edit_text(query.message.text + f"\n\n{response_text}")
+                if coins + reward > 10000:
+                    reward = 10000 - coins
+
+                await DB.add_pokecoin(user_id, reward, query.from_user.username)
+                text = f"Correct 🎉 +{reward} Rubies 💎"
+
+        # ---------- WRONG ----------
         else:
-            print("active session not found")
+            text = "Wrong Answer ❌"
 
-    else:
-        await query.answer("Not for you")
+        active_trivia.pop(user_id, None)
+
+        await query.message.edit_text(
+            f"{query.message.text}\n\n{text}"
+        )
+
+    except Exception as e:
+        print("Callback Error:", e)
 
 
+# ---------------- ADMIN COMMAND ----------------
 @app.on_message(filters.command("endtriv") & filters.user(devs), group=84)
-async def endtriv(client: Client, message: Message):
-    user_cooldowns.clear()
+async def endtriv(_, message: Message):
     active_trivia.clear()
-    await message.reply_text("Ended all Active Trivia Sessions")
+    user_cooldowns.clear()
+    await message.reply_text("🛑 All Trivia Sessions Ended Successfully")
