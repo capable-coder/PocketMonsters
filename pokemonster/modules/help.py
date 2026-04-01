@@ -27,7 +27,7 @@ responses = [
 ➛ Every 100 messages, a new Pokemon spawns in the group.
 ➛ After 35 messages, the Pokemon will run away.
 
-× For more info, join @PokemonCatcherUpdates.''',
+× For more info, join @II_ADI_II .''',
 
     '''𝗕𝗲𝗰𝗼𝗺𝗲 𝗮 𝗠𝗮𝘀𝘁𝗲𝗿 𝗼𝗳 𝗣𝗼𝗸𝗲𝗺𝗼𝗻𝘀 𝘄𝗶𝘁𝗵 𝘁𝗵𝗲 𝗵𝗲𝗹𝗽 𝗼𝗳 𝘆𝗼𝘂𝗿 𝗳𝗮𝘃𝗼𝗿𝗶𝘁𝗲 𝗕𝗼𝘁!
 ✧ 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦
