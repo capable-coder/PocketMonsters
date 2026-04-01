@@ -34,7 +34,7 @@ def random_text(message):
 # 🔥 IMAGES (FIXED INDENTATION)
 IMAGES = [
     "https://i.ibb.co/BHNStd9P/x.jpg",
-    "https://i.ibb.co/S4D4kRg3/x.jpg",
+    "https://i.ibb.co/Wpk60gZB/x.jpg",
     "https://i.ibb.co/8gfRGhh5/x.jpg"
 ]
 
