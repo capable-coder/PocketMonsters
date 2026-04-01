@@ -73,7 +73,7 @@ async def hunt(c: Client, message: Message):
     )
 
     msg_dict[chat_id] = msg
-    cooldown[chat_id] = time.time() + 300  # 5 min cooldown
+    cooldown[chat_id] = time.time() + 120  # 5 min cooldown
 
     # ⏳ 60 sec baad delete
     await asyncio.sleep(60)
