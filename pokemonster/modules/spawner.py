@@ -36,7 +36,7 @@ async def get_frequency(chatid):
     try:
         return await DB.read_frequency(chatid)
     except:
-        return 50  # default spawn after 50 msgs
+        return 5  # default spawn after 50 msgs
 
 
 # 🔹 SPAWN SYSTEM
