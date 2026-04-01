@@ -40,7 +40,7 @@ async def get_frequency(chatid):
 
 
 # 🔹 SPAWN SYSTEM
-@app.on_message(filters.group & filters.all, group=0)
+@app.on_message(filters.group & filters.text, group=0)
 async def send_image(c: Client, message: Message):
     chatid = message.chat.id   # ✅ FIX
 
