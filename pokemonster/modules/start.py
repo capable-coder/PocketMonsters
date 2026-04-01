@@ -29,6 +29,12 @@ def random_text(message):
         f"🏆 Catch 'em all {message.from_user.mention}!",
     ]
     return random.choice(responses)
+   
+    IMAGES = [
+    "https://i.ibb.co/BHNStd9P/x.jpg",
+    "https://i.ibb.co/S4D4kRg3/x.jpg",
+    "https://i.ibb.co/8gfRGhh5/x.jpg"
+    ]
 
 
 # 🔹 BOT ADDED IN GROUP
@@ -85,14 +91,22 @@ async def start(client: Client, message: Message):
         )
 
     # 👉 GROUP CHAT
+    # 👉 GROUP CHAT
+else:
+    Check = await app.get_chat_member(message.chat.id, me.id)
+
+    if Check.status == ChatMemberStatus.ADMINISTRATOR:
+
+        text = random_text(message)
+        image = random.choice(IMAGES)
+
+        await message.reply_photo(
+            photo=image,
+            caption=text
+        )
+
     else:
-        Check = await app.get_chat_member(message.chat.id, me.id)
-
-        if Check.status == ChatMemberStatus.ADMINISTRATOR:
-            await message.reply_text(random_text(message))
-        else:
-            await message.reply_text("❌ Make me admin to play!")
-
+        await message.reply_text("❌ Make me admin to play!")
 
 # 🔹 HELP MENU
 @app.on_callback_query(filters.regex("help_menu"))
