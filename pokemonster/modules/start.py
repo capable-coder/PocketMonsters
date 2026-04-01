@@ -29,12 +29,14 @@ def random_text(message):
         f"🏆 Catch 'em all {message.from_user.mention}!",
     ]
     return random.choice(responses)
-   
-    IMAGES = [
+
+
+# 🔥 IMAGES (FIXED INDENTATION)
+IMAGES = [
     "https://i.ibb.co/BHNStd9P/x.jpg",
     "https://i.ibb.co/S4D4kRg3/x.jpg",
     "https://i.ibb.co/8gfRGhh5/x.jpg"
-    ]
+]
 
 
 # 🔹 BOT ADDED IN GROUP
@@ -42,14 +44,17 @@ def random_text(message):
 async def on_chat_member_updated(client: Client, message: Message):
     if isinstance(message.new_chat_member, ChatMember) and message.new_chat_member.user.id == client.me.id:
         chat_id = message.chat.id
-        await client.send_message(chat_id, "🔥 Thanks for adding me!\n👉 Make me admin to start catching Pokémon.")
+        await client.send_message(
+            chat_id,
+            "🔥 Thanks for adding me!\n👉 Make me admin to start catching Pokémon."
+        )
 
 
 # 🔹 START COMMAND
 @app.on_message(filters.command("start") & ~filters.bot, group=-4)
 async def start(client: Client, message: Message):
 
-    me = await app.get_me()
+    me = await client.get_me()
 
     # 👉 PRIVATE CHAT
     if message.chat.type == ChatType.PRIVATE:
@@ -70,7 +75,10 @@ async def start(client: Client, message: Message):
 
         buttons = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("➕ 𝐏𝐨𝐤𝐞𝐝𝐞𝐱🗯🐛", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")
+                InlineKeyboardButton(
+                    "➕ 𝐏𝐨𝐤𝐞𝐝𝐞𝐱🗯🐛",
+                    url=f"https://t.me/{BOT_USERNAME}?startgroup=true"
+                )
             ],
             [
                 InlineKeyboardButton("📢 𝐔𝐩𝐝𝐚𝐭𝐞𝐬", url=UPDATE_LINK),
@@ -91,22 +99,22 @@ async def start(client: Client, message: Message):
         )
 
     # 👉 GROUP CHAT
-    # 👉 GROUP CHAT
-else:
-    Check = await app.get_chat_member(message.chat.id, me.id)
-
-    if Check.status == ChatMemberStatus.ADMINISTRATOR:
-
-        text = random_text(message)
-        image = random.choice(IMAGES)
-
-        await message.reply_photo(
-            photo=image,
-            caption=text
-        )
-
     else:
-        await message.reply_text("❌ Make me admin to play!")
+        Check = await client.get_chat_member(message.chat.id, me.id)
+
+        if Check.status == ChatMemberStatus.ADMINISTRATOR:
+
+            text = random_text(message)
+            image = random.choice(IMAGES)
+
+            await message.reply_photo(
+                photo=image,
+                caption=text
+            )
+
+        else:
+            await message.reply_text("❌ Make me admin to play!")
+
 
 # 🔹 HELP MENU
 @app.on_callback_query(filters.regex("help_menu"))
