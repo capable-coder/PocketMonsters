@@ -1,15 +1,18 @@
 import random
 import json
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
 
 from pokemonster import app
-from pokemonster.database import Database
 from pokemonster.db.userdb import USERSINFO
 
-DB = Database()
+# ✅ IMPORT CLAIM DB
+from pokemonster.database.claimdb import ClaimDB
+
 UI = USERSINFO()
+claim_db = ClaimDB()
 
 # -------- LOAD POKEDEX --------
 with open("pokedex.json") as f:
@@ -24,25 +27,31 @@ async def claim_pokemon(client: Client, message: Message):
     user_id = message.from_user.id
 
     # ❌ Already claimed
-    if await DB.is_group_claimed(chat_id):
-        return await message.reply_text("😏 Already claimed in this group baby~")
+    if claim_db.is_claimed(chat_id):
+        return await message.reply_text(
+            "😏 Already claimed in this group baby~ try somewhere else 💕"
+        )
 
     # ❌ Check bot admin
     bot = await client.get_me()
     bot_member = await client.get_chat_member(chat_id, bot.id)
 
     if bot_member.status not in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
-        return await message.reply_text("😤 Make me admin first baby!")
+        return await message.reply_text(
+            "😤 Make me admin first baby… then I’ll reward you 💅"
+        )
 
     # ❌ Check group size
     try:
         members_count = await client.get_chat_members_count(chat_id)
     except:
-        return await message.reply_text("😶 Can't verify group members")
+        return await message.reply_text(
+            "😶 I can't check members right now… try again later"
+        )
 
     if members_count < 500:
         return await message.reply_text(
-            f"🥺 Need 500+ members baby\nCurrent: {members_count}"
+            f"🥺 I only reward big groups baby...\n👥 Need: 500+\n📊 Current: {members_count}"
         )
 
     # 🎲 Random Pokémon
@@ -51,31 +60,34 @@ async def claim_pokemon(client: Client, message: Message):
     img = rand_poke["link"]
     pid = rand_poke["id"]
 
-    # Clean name
+    # 🔧 Clean name
     if "." in name:
         name = " ".join(i.strip() for i in name.split("."))
     elif "-" in name:
         name = " ".join(i.strip() for i in name.split("-"))
 
-    # 💾 Save Pokémon to user
+    # 💾 Save Pokémon (same as catch system)
     UI.save_info(chat_id, user_id, pid)
 
-    # ✅ Mark claimed in MongoDB
-    await DB.mark_group_claimed(chat_id)
+    # ✅ Mark claimed in DB
+    claim_db.set_claimed(chat_id)
 
     # 💖 Leena Style Caption
     caption = f"""
 💖 Hey {message.from_user.mention}…
 
-You added me here… so I had to reward you 😏✨
+So you brought me here… I like that 😏✨
 
-🎁 You got: **{name}**
+🎁 Your reward:
+✨ **{name}**
 
-Lucky ho tum… sabko aise gifts nahi milte 😌💕
+Careful… this one is rare 👀💕
+
+Enjoy it… not everyone gets lucky like you 😌💗
 """
 
-    # 📸 Send Image
+    # 📸 Send Pokémon Image
     await message.reply_photo(
         photo=img,
         caption=caption
-  )
+    )
