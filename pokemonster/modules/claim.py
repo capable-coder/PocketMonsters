@@ -21,7 +21,7 @@ with open("pokedex.json", "r", encoding="utf-8") as f:
 @app.on_message(filters.command("claim") & filters.private)
 async def claim_dm(client: Client, message: Message):
     await message.reply_text(
-        "😌 This command works only in groups baby...\n\nAdd me to a group and try there 💖"
+        "😌 This command works only in groups baby...\nAdd me to a group and try there 💖"
     )
 
 
@@ -55,7 +55,7 @@ async def claim_pokemon(client: Client, message: Message):
             "😶 I can't check members right now… try again later"
         )
 
-    if members_count < 500:
+    if members_count < 5:
         return await message.reply_text(
             f"🥺 I only reward big groups baby...\n👥 Need: 500+\n📊 Current: {members_count}"
         )
