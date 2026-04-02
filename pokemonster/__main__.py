@@ -1,12 +1,12 @@
 import logging
 import random
 import os
-import asyncio
 
 from pyrogram import idle
 from pyrogram.types import BotCommand
+
 # 🔥 LOAD ALL MODULES (IMPORTANT)
-#import pokemonster.modules.claim
+import pokemonster.modules.claim
 import pokemonster.modules.dev
 import pokemonster.modules.frequency
 import pokemonster.modules.guess
@@ -38,7 +38,7 @@ from pokemonster.database import (
     sorted_money_database
 )
 
-# ---------------- LOGGING SAFE PATH ----------------
+# ---------------- LOGGING ----------------
 LOG_PATH = os.path.join("pokemonster", "logs", "logs.txt")
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
@@ -61,7 +61,7 @@ async def load_start():
 
 
 # ---------------- COMMANDS ----------------
-async def cmds(app):
+async def cmds():
     await app.set_bot_commands(
         [
             BotCommand("start", "Check bot status"),
@@ -89,35 +89,25 @@ async def cmds(app):
 
 # ---------------- MAIN ----------------
 async def main():
+    await app.start()
+    await load_start()
+
+    # safe startup message
     try:
-        await app.start()
-        await load_start()
-
-        # safe startup message
-        try:
-            a1 = random.randint(1, 9)
-            await app.send_message(
-                chat_id=-1003801101735,
-                text=f"Bot Started!\nTime: 0.{a1}"
-            )
-        except Exception as e:
-            LOGGER.warning(f"Log channel message failed: {e}")
-
-        await cmds(app)
-
-        LOGGER.info("Bot is running...")
-        await idle()
-
+        a1 = random.randint(1, 9)
+        await app.send_message(
+            chat_id=-1003801101735,
+            text=f"Bot Started!\nTime: 0.{a1}"
+        )
     except Exception as e:
-        LOGGER.error(f"Fatal error in main: {e}")
+        LOGGER.warning(f"Log channel message failed: {e}")
 
-    finally:
-        try:
-            await app.stop()
-        except Exception as e:
-            LOGGER.error(f"Stop error: {e}")
+    await cmds()
+
+    LOGGER.info("Bot is running...")
+    await idle()
 
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    asyncio.run(main())
+    app.run(main())
