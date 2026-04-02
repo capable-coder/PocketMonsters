@@ -5,6 +5,23 @@ import asyncio
 
 from pyrogram import idle
 from pyrogram.types import BotCommand
+# 🔥 LOAD ALL MODULES (IMPORTANT)
+import pokemonster.modules.claim
+import pokemonster.modules.dev
+import pokemonster.modules.frequency
+import pokemonster.modules.guess
+import pokemonster.modules.help
+import pokemonster.modules.host
+import pokemonster.modules.leader
+import pokemonster.modules.pokecoin
+import pokemonster.modules.pokedex
+import pokemonster.modules.pokegift
+import pokemonster.modules.pokestore
+import pokemonster.modules.release
+import pokemonster.modules.spawner
+import pokemonster.modules.start
+import pokemonster.modules.trivia
+import pokemonster.modules.watcher
 
 from pokemonster import app
 
