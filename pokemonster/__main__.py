@@ -80,7 +80,7 @@ async def main():
         try:
             a1 = random.randint(1, 9)
             await app.send_message(
-                chat_id=-1003761214502,
+                chat_id=-1003801101735,
                 text=f"Bot Started!\nTime: 0.{a1}"
             )
         except Exception as e:
