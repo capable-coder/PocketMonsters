@@ -56,7 +56,7 @@ class USERSINFO(MongoDB):
 
     def save_info(self, chat_id, user_id, poke_id, fav_poke=0, reduce=False):
         try:
-            pinfo = Pokemons.get_po_info(poke_id)
+            pinfo = Pokemons.get_po_info(int(poke_id))
         except Exception:
             return
         p_w = int(pinfo["weight"])
