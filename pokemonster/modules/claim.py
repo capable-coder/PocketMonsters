@@ -2,13 +2,13 @@ import random
 import json
 
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ChatMemberStatus
 
 from pokemonster import app
 from pokemonster.db.userdb import USERSINFO
 
-# ✅ IMPORT CLAIM DB
+# ✅ CLAIM DB
 from pokemonster.database.claimdb import ClaimDB
 
 UI = USERSINFO()
@@ -19,8 +19,16 @@ with open("pokedex.json") as f:
     data = json.load(f)
 
 
+# -------- DM PROTECTION --------
+@app.on_message(filters.command("claim") & filters.private)
+async def claim_dm(client: Client, message: Message):
+    await message.reply_text(
+        "😌 This command works only in groups baby...\n\nAdd me to a group and try there 💖"
+    )
+
+
 # -------- CLAIM COMMAND --------
-@app.on_message(filters.command("claim") & filters.group)
+@app.on_message(filters.command("claim") & filters.group, group=5)
 async def claim_pokemon(client: Client, message: Message):
 
     chat_id = message.chat.id
@@ -29,7 +37,7 @@ async def claim_pokemon(client: Client, message: Message):
     # ❌ Already claimed
     if claim_db.is_claimed(chat_id):
         return await message.reply_text(
-            "😏 Already claimed in this group baby~ try somewhere else 💕"
+            "😏 Already claimed in this group baby~ try another group 💕"
         )
 
     # ❌ Check bot admin
@@ -66,13 +74,23 @@ async def claim_pokemon(client: Client, message: Message):
     elif "-" in name:
         name = " ".join(i.strip() for i in name.split("-"))
 
-    # 💾 Save Pokémon (same as catch system)
+    # 💾 Save Pokémon
     UI.save_info(chat_id, user_id, pid)
 
-    # ✅ Mark claimed in DB
+    # ✅ Mark claimed
     claim_db.set_claimed(chat_id)
 
-    # 💖 Leena Style Caption
+    # 💖 Button (for vibe)
+    buttons = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("💖 View Collection", callback_data="pokedex"),
+                InlineKeyboardButton("🎮 Play More", callback_data="games")
+            ]
+        ]
+    )
+
+    # 💖 Caption
     caption = f"""
 💖 Hey {message.from_user.mention}…
 
@@ -86,8 +104,9 @@ Careful… this one is rare 👀💕
 Enjoy it… not everyone gets lucky like you 😌💗
 """
 
-    # 📸 Send Pokémon Image
+    # 📸 Send Pokémon
     await message.reply_photo(
         photo=img,
-        caption=caption
+        caption=caption,
+        reply_markup=buttons
     )
