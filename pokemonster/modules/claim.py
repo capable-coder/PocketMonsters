@@ -2,20 +2,18 @@ import random
 import json
 
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.enums import ChatMemberStatus
 
 from pokemonster import app
 from pokemonster.db.userdb import USERSINFO
-
-# ✅ CLAIM DB
 from pokemonster.database.claimdb import ClaimDB
 
 UI = USERSINFO()
 claim_db = ClaimDB()
 
 # -------- LOAD POKEDEX --------
-with open("pokedex.json") as f:
+with open("pokedex.json", "r", encoding="utf-8") as f:
     data = json.load(f)
 
 
@@ -80,7 +78,7 @@ async def claim_pokemon(client: Client, message: Message):
     # ✅ Mark claimed
     claim_db.set_claimed(chat_id)
 
-    # 💖 Button (for vibe)
+    # 💖 Buttons
     buttons = InlineKeyboardMarkup(
         [
             [
@@ -104,9 +102,39 @@ Careful… this one is rare 👀💕
 Enjoy it… not everyone gets lucky like you 😌💗
 """
 
-    # 📸 Send Pokémon
     await message.reply_photo(
         photo=img,
         caption=caption,
         reply_markup=buttons
     )
+
+
+# -------- POKEDEX CALLBACK (FIXED PART) --------
+@app.on_callback_query(filters.regex("^pokedex$"))
+async def show_pokedex(client: Client, callback_query: CallbackQuery):
+
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+
+    await callback_query.answer("📦 Loading your Pokédex...")
+
+    # ⚠️ IMPORTANT: check your actual DB function name
+    try:
+        user_data = UI.get_user_pokemon(chat_id, user_id)
+    except:
+        user_data = None
+
+    if not user_data:
+        return await callback_query.message.edit_text(
+            "😢 You don't have any Pokémon yet!\n\nUse /claim to start your journey 💖"
+        )
+
+    text = "💖 Your Pokémon Collection:\n\n"
+
+    for poke in user_data:
+        try:
+            text += f"🎮 ID: {poke['pid']}\n"
+        except:
+            text += f"🎮 ID: {poke}\n"
+
+    await callback_query.message.edit_text(text)
