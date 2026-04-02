@@ -1,4 +1,4 @@
-from pokemonster.database import MongoDB
+from pokemonster.db import MongoDB
 
 class ClaimDB:
     def __init__(self):
