@@ -6,3 +6,4 @@ pyrogram
 python-dotenv
 TgCrypto
 motor
+pytz
