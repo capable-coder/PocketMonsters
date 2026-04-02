@@ -1,6 +1,7 @@
 import logging
 import random
 import os
+import asyncio
 
 from pyrogram import idle
 from pyrogram.types import BotCommand
@@ -102,4 +103,4 @@ async def main():
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(main())
+    asyncio.run(main())
