@@ -10,7 +10,7 @@ from pokemonster.db.userdb import USERSINFO
 
 from ..config import users_filt
 
-# Text
+# ---------------- TEXT ----------------
 run_away_texts = [
     "You Missed the Pokemon!",
     "Oh No! The Pokemon broke free!",
@@ -20,7 +20,7 @@ run_away_texts = [
     "So close!"
 ]
 
-# Load pokedex
+# ---------------- LOAD POKEDEX ----------------
 with open('pokedex.json') as f:
     data = json.load(f)
 
@@ -31,7 +31,17 @@ DB = Database()
 UI = USERSINFO()
 
 
-# 🔥 SAFE DEFAULT FUNCTION
+# ---------------- DEFAULT STRUCTURE ----------------
+def default_spawn():
+    return {
+        "val": False,
+        "msg_count": 0,
+        "appear_msg": 0,
+        "m_id": 0
+    }
+
+
+# ---------------- SAFE FREQUENCY ----------------
 async def get_frequency(chatid):
     try:
         return await DB.read_frequency(chatid)
@@ -39,13 +49,14 @@ async def get_frequency(chatid):
         return 5
 
 
-# 🔹 SPAWN SYSTEM
+# ---------------- SPAWN SYSTEM ----------------
 @app.on_message(filters.group & filters.text, group=0)
 async def send_image(c: Client, message: Message):
-    chatid = message.chat.id   # ✅ FIX
+    chatid = message.chat.id
 
-    if chatid not in spawned:   # ✅ FIX
-        spawned[chatid] = {"val": False, "msg_count": 0, "appear_msg": 0, "m_id": 0}
+    # ✅ ensure default structure
+    if chatid not in spawned:
+        spawned[chatid] = default_spawn()
 
     if spawned[chatid]["val"]:
         return
@@ -53,7 +64,6 @@ async def send_image(c: Client, message: Message):
     spawned[chatid]["appear_msg"] += 1
 
     msg_freq = await get_frequency(chatid)
-
     if msg_freq <= 0:
         msg_freq = 50
 
@@ -62,18 +72,20 @@ async def send_image(c: Client, message: Message):
         rand_poke = random.choice(data['poke'])
         pokename = rand_poke['name']
 
+        # clean name
         if "." in pokename:
             pokename = " ".join(i.strip() for i in pokename.split("."))
         elif "-" in pokename:
             pokename = " ".join(i.strip() for i in pokename.split("-"))
 
-        poke_in[chatid] = {   # ✅ FIX
+        poke_in[chatid] = {
             "name": pokename,
             "pokeid": rand_poke["id"],
             "pokelink": rand_poke['link']
         }
 
-        spawned[chatid] = {"appear_msg": 0}
+        # ✅ ONLY reset counter (not full dict)
+        spawned[chatid]["appear_msg"] = 0
 
         img = await app.send_photo(
             chat_id=chatid,
@@ -81,24 +93,25 @@ async def send_image(c: Client, message: Message):
             caption="✨ A Pokémon appeared!\nUse /catch <name> to catch it!"
         )
 
-        spawned[chatid] = {
+        # ✅ set full state safely
+        spawned[chatid].update({
             "msg_count": 0,
             "val": True,
             "m_id": img.id,
             "appear_msg": 0
-        }
+        })
 
         raise ContinuePropagation
 
 
-# 🔹 CATCH SYSTEM
+# ---------------- CATCH SYSTEM ----------------
 @app.on_message(filters.command('catch') & filters.group & ~filters.forwarded, group=1)
 async def catch(c: Client, message: Message):
     try:
         if not message.from_user:
             return await message.reply_text("Invalid user")
 
-        chatid = message.chat.id   # ✅ FIX
+        chatid = message.chat.id
         userid = message.from_user.id
 
         if not spawned.get(chatid, {}).get("val"):
@@ -109,7 +122,10 @@ async def catch(c: Client, message: Message):
         except:
             return await message.reply_text("Use: /catch <pokemon name>")
 
-        pokename = poke_in[chatid]['name'].lower()
+        pokename = poke_in.get(chatid, {}).get('name', "").lower()
+
+        if not pokename:
+            return await message.reply_text("⚠️ Error: Pokémon data missing")
 
         words = pokename.split()
         short = max(words, key=len)
@@ -123,8 +139,9 @@ async def catch(c: Client, message: Message):
                 f"🎉 {message.from_user.mention} caught {pokename.capitalize()}!"
             )
 
-            poke_in[chatid].clear()
-            spawned[chatid] = {"val": False, "msg_count": 0, "appear_msg": 0, "m_id": 0}
+            poke_in.pop(chatid, None)
+
+            spawned[chatid] = default_spawn()
 
         else:
             await message.reply_text("🥴 Wrong guess!")
@@ -133,10 +150,10 @@ async def catch(c: Client, message: Message):
         print(e)
 
 
-# 🔹 RUN SYSTEM
+# ---------------- RUN SYSTEM ----------------
 @app.on_message(filters.group, group=2)
 async def run(c: Client, message: Message):
-    chatid = message.chat.id   # ✅ FIX
+    chatid = message.chat.id
 
     if not spawned.get(chatid, {}).get("val"):
         raise ContinuePropagation
@@ -146,7 +163,7 @@ async def run(c: Client, message: Message):
         try:
             await app.send_message(
                 chatid,
-                f"{random.choice(run_away_texts)}\nIt was {poke_in[chatid]['name']}"
+                f"{random.choice(run_away_texts)}\nIt was {poke_in.get(chatid, {}).get('name', 'Unknown')}"
             )
         except:
             pass
@@ -156,18 +173,18 @@ async def run(c: Client, message: Message):
         except:
             pass
 
-        spawned[chatid] = {"val": False, "msg_count": 0, "appear_msg": 0, "m_id": 0}
-        poke_in[chatid].clear()
+        spawned[chatid] = default_spawn()
+        poke_in.pop(chatid, None)
 
     else:
         spawned[chatid]["msg_count"] += 1
         raise ContinuePropagation
 
 
-# 🔹 COOLDOWN CHECK
+# ---------------- COOLDOWN ----------------
 @app.on_message(filters.command("cooldown") & users_filt, group=8)
 async def cooldown_cmd(client: Client, message: Message):
-    chatid = message.chat.id   # ✅ FIX
+    chatid = message.chat.id
 
     msg_freq = await get_frequency(chatid)
 
