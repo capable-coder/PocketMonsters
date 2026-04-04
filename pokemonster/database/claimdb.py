@@ -19,31 +19,33 @@ class ClaimDB:
             date = self._today()
 
         data = self.db.find_one({
-            "_id": user_id,
-            "date": date
+            "_id": user_id
         })
 
-        return bool(data)
+        if not data:
+            return False
+
+        return data.get("date") == date
 
     # 💾 SET CLAIM
     def set_claim(self, user_id, date=None):
         if date is None:
             date = self._today()
 
-        existing = self.db.find_one({
-            "_id": user_id,
-            "date": date
-        })
-
         # already claimed today
-        if existing:
+        data = self.db.find_one({"_id": user_id})
+        if data and data.get("date") == date:
             return False
 
-        self.db.insert_one({
-            "_id": user_id,
-            "date": date,
-            "claimed": True
-        })
+        # ✅ SAFE UPSERT (NO DUPLICATE ERROR)
+        self.db.update(
+            {"_id": user_id},
+            {
+                "date": date,
+                "claimed": True
+            },
+            upsert=True
+        )
 
         return True
 
@@ -52,6 +54,6 @@ class ClaimDB:
         ist = pytz.timezone("Asia/Kolkata")
         today = datetime.now(ist)
 
-        # simple cleanup logic (optional)
-        # you can improve later with full date comparison
+        # ⚠️ WARNING: ye sab delete kar raha hai
+        # future me improve karna
         self.db.delete_many({"claimed": True})
