@@ -28,7 +28,7 @@ user_cooldowns = {}     # user_id -> cooldown time
 @app.on_message(filters.group & filters.command("trivia"), group=84)
 async def trivia(_, message: Message):
 
-    user_id = str(message.from_user.id)
+    user_id = message.from_user.id   # ✅ FIX (STRING HATA DIYA)
 
     # ---------- COOLDOWN CHECK ----------
     if user_id in user_cooldowns:
@@ -47,7 +47,7 @@ async def trivia(_, message: Message):
         return await message.reply_text("⚠️ You already have an active trivia session!")
 
     # ---------- SET COOLDOWN ----------
-    user_cooldowns[user_id] = time.time() + 120  # 30 min
+    user_cooldowns[user_id] = time.time() + 120
 
     # ---------- PICK QUESTION ----------
     quesdata = random.choice(data["results"])
@@ -96,9 +96,9 @@ async def trivia_callback(_, query: CallbackQuery):
     try:
         parts = query.data.split(":")
         selected = parts[1].lower()
-        user_id = str(parts[2])
+        user_id = int(parts[2])   # ✅ FIX (STRING → INT)
 
-        click_user = str(query.from_user.id)
+        click_user = query.from_user.id   # ✅ FIX
 
         # ---------- SECURITY CHECK ----------
         if click_user != user_id:
@@ -114,7 +114,8 @@ async def trivia_callback(_, query: CallbackQuery):
 
         session["answered"] = True
 
-        coins = int(await DB.read_money(user_id))
+        # ✅ FIX (DB hata ke direct function use)
+        coins = int(await read_money(user_id))
         correct = session["correct_answer"]
 
         # ---------- CORRECT ----------
@@ -128,7 +129,7 @@ async def trivia_callback(_, query: CallbackQuery):
                 if coins + reward > 10000:
                     reward = 10000 - coins
 
-                await DB.add_pokecoin(user_id, reward, query.from_user.username)
+                await add_pokecoin(user_id, reward, query.from_user.username)  # ✅ FIX
                 text = f"Correct 🎉 +{reward} Rubies 💎"
 
         # ---------- WRONG ----------
