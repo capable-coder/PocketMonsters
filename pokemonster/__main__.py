@@ -83,7 +83,7 @@ async def cmds():
             BotCommand("pokestore", "Buy Pokemon"),
             BotCommand("wallet", "Check coins"),
             BotCommand("pay", "Send money"),
-            BotCommand("claim", "Claim free Pokemon 🎁,
+            BotCommand("claim", "Claim free Pokemon 🎁"),
         ]
     )
 
