@@ -78,11 +78,12 @@ async def cmds():
             BotCommand("updatepower", "Update power"),
             BotCommand("spawn", "Spawn test"),
             BotCommand("guess", "Guess Pokemon"),
-            BotCommand("poketrivia", "Trivia game"),
+            BotCommand("trivia", "Trivia game"),
             BotCommand("freqchange", "Change spawn frequency"),
             BotCommand("pokestore", "Buy Pokemon"),
             BotCommand("wallet", "Check coins"),
             BotCommand("pay", "Send money"),
+            BotCommand("claim", "Claim free Pokemon 🎁,
         ]
     )
 
