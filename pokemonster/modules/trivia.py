@@ -7,7 +7,8 @@ from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from pokemonster import app
-from pokemonster.database import Database
+#from pokemonster.database import Database
+from pokemonster.database import add_pokecoin, read_money
 from ..config import devs
 
 
@@ -20,7 +21,7 @@ with open('trivia.json', 'r', encoding='utf-8') as f:
 active_trivia = {}      # user_id -> session
 user_cooldowns = {}     # user_id -> cooldown time
 
-DB = Database()
+#DB = Database()
 
 
 # ---------------- TRIVIA COMMAND ----------------
