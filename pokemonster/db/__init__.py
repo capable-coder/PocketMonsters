@@ -54,12 +54,13 @@ class MongoDB:
         new = self.collection.find_one({"_id": _id})
         return old, new
 
-    # Update one entry from collection
-    def update(self, query, update, is_agg: bool = False):
+    # ✅ FIXED UPDATE (UPSERT SUPPORT ADDED)
+    def update(self, query, update, is_agg: bool = False, upsert: bool = False):
         if is_agg:
-            result = self.collection.update_one(query, update)
+            result = self.collection.update_one(query, update, upsert=upsert)
         else:
-            result = self.collection.update_one(query, {"$set": update})
+            result = self.collection.update_one(query, {"$set": update}, upsert=upsert)
+
         new_document = self.collection.find_one(query)
         return result.modified_count, new_document
 
@@ -85,10 +86,9 @@ class ClaimDB:
         return bool(data and data.get("claimed"))
 
     def set_claimed(self, chat_id):
-        if self.db.find_one({"_id": chat_id}):
-            self.db.update({"_id": chat_id}, {"claimed": True})
-        else:
-            self.db.insert_one({
-                "_id": chat_id,
-                "claimed": True
-            })
+        # ✅ NOW USING UPSERT (NO DUPLICATE ERROR EVER)
+        self.db.update(
+            {"_id": chat_id},
+            {"claimed": True},
+            upsert=True
+        )
