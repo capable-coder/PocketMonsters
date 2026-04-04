@@ -22,6 +22,10 @@ active_trivia = {}      # user_id -> session
 user_cooldowns = {}     # user_id -> cooldown time
 
 #DB = Database()
+@app.on_message(filters.private)
+async def get_file_id(client, message):
+    if message.video:
+        await message.reply_text(f"FILE_ID:\n{message.video.file_id}")
 
 
 # ---------------- TRIVIA COMMAND ----------------
